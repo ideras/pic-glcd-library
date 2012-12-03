@@ -1,0 +1,11 @@
+PIC GLCD Library
+
+Welcome to the GLCD Library for PIC. It is a derivate of the original Arduino KS0108 Library. 
+It has been ported to PIC by Ivan de Jesus Deras (ideras@gmail.com). This port is based on version 2
+of that Library.
+
+You can find the original library at 
+
+http://www.arduino.cc/playground/Code/GLCDks0108
+
+Tested only on PIC16F887 !
