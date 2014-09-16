@@ -21,7 +21,6 @@ typedef uint8_t byte;
 
 // Chip specific includes
 #include "GLCD_Pins.h"
-#include "GLCD_Panel.h"      // this contains LCD panel specific configuration
 
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 64
