@@ -1,41 +1,22 @@
 /*
-  ks0108.cpp - Arduino library support for ks0108 and compatable graphic LCDs
-  Copyright (c)2008 Michael Margolis All right reserved
-  mailto:memargolis@hotmail.com?subject=KS0108_Library 
+  GLCD.h - PIC library support for ks0108 and compatible graphic LCDs
+  Ported to PIC by Ivan de Jesus Deras ideras@gmail.com
 
-  The high level functions of this library are based on version 1.1 of ks0108 graphics routines
-  written and copyright by Fabian Maximilian Thiele. His sitelink is dead but
-  you can obtain a copy of his original work here:
-  http://www.scienceprog.com/wp-content/uploads/2007/07/glcd_ks0108.zip
-
-  Code changes include conversion to an Arduino C++ library, rewriting the low level routines 
-  to read busy status flag and support a wider range of displays, adding more flexibility
-  in port addressing and improvements in I/O speed. The interface has been made more Arduino friendly
-  and some convenience functions added. 
+  Original Arduino library by Michael Margolis All right reserved
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-  Version:   1.0 - May 8  2008  - first release
-  Version:   1.1 - Nov 7  2008  - restructured low level code to adapt to panel speed
-                                 - moved chip and panel configuration into seperate header files    
-                                                                 - added fixed width system font
-  Version:   2   - May 26 2009   - second release
-                                 - added support for Mega and Sanguino, improved panel speed tolerance, added bitmap support
-     
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    
  */
 
 #include <stdint.h>
 #include <xc.h>
 
-#define ksSOURCE
 #include "GLCD.h"
 
 #define delay(ms) __delay_ms(ms)
 
-// the (EN_DELAY_VALUE) argument for the above delay is in GLCD_panel.h
-#define EN_DELAY() __delay_us(EN_DELAY_VALUE)
+#define EN_DELAY() __delay_us(2)
 
 /* GLCD Macros */
 #define INPUT_MODE  0xFF
@@ -50,20 +31,13 @@
 		fastWriteHigh(EN); /* EN high level width min 450 ns */ \
 		EN_DELAY();		\
 		fastWriteLow(EN);	\
-		/*EN_DELAY(); // some displays may need this delay at the end of the enable pulse */ \
+		EN_DELAY(); /* Some displays may need this delay at the end of the enable pulse */ \
 	} while (0)
 
 #define GLCD_SelectChip(chip)			\
 	do {					\
-		if(chipSelect[chip] & 1) 	\
-			fastWriteHigh(CSEL1);	\
-		else				\
-			fastWriteLow(CSEL1);	\
-						\
-		if(chipSelect[chip] & 2)	\
-			fastWriteHigh(CSEL2);	\
-		else				\
-			fastWriteLow(CSEL2);	\
+            CSEL1 = chip;       \
+            CSEL2 = !chip;      \
 	} while (0)
 
 #define GLCD_WaitReady(chip)                        \
@@ -76,7 +50,7 @@
         fastWriteHigh(R_W);                         \
         fastWriteHigh(EN);                          \
         EN_DELAY();                                 \
-        while (LCD_DATA_IN_HIGH & LCD_BUSY_FLAG);   \
+        while (GLCD_DIN_REG & LCD_BUSY_FLAG);   \
         fastWriteLow(EN);                           \
     } while (0)
 
@@ -88,9 +62,7 @@
 
 #define GLCD_WriteCommand(cmd, chip)                    \
     do {                                                \
-        if (GLCD_Coord.x % CHIP_WIDTH == 0 && chip > 0) { /*todo , ignore address 0??? */   \
-            EN_DELAY();                                                                     \
-        }                                                                                   \
+                                                                                 \
         GLCD_WaitReady(chip);                                                               \
         fastWriteLow(D_I);                                                                  \
         fastWriteLow(R_W);                                                                  \
@@ -883,7 +855,15 @@ void GLCD_Init(boolean invert)
      *  extra blind delay for slow rising external reset signals
      *  and to give time for glcd to get up and running
      */
+#ifdef _PIC18
+    delay(10);
+    delay(10);
+    delay(10);
+    delay(10);
+    delay(10);
+#else
     delay(50);
+#endif
 
     GLCD_Coord.x = 0;
     GLCD_Coord.y = 0;
@@ -896,7 +876,17 @@ void GLCD_Init(boolean invert)
         GLCD_WriteCommand(LCD_ON, chip); // power on
         GLCD_WriteCommand(LCD_DISP_START, chip); // display start line = 0
     }
+    
+#ifdef _PIC18
+    delay(10);
+    delay(10);
+    delay(10);
+    delay(10);
+    delay(10);
+#else
     delay(50);
+#endif
+    
     GLCD_ClearScreen(invert ? BLACK : WHITE); // display clear
     GLCD_GotoXY(0, 0);
 }
@@ -919,11 +909,8 @@ uint8_t GLCD_DoReadData(uint8_t first)
     fastWriteHigh(EN); // EN high level width: min. 450ns
     EN_DELAY();
 
-#ifdef LCD_DATA_NIBBLES
-    data = (LCD_DATA_IN_LOW & 0x0F) | (LCD_DATA_IN_HIGH & 0xF0);
-#else
-    data = LCD_DATA_IN_HIGH; // low and high nibbles on same port so read all 8 bits at once
-#endif 
+    data = GLCD_DIN_REG;
+
     fastWriteLow(EN);
     if (first == 0)
         GLCD_GotoXY(GLCD_Coord.x, GLCD_Coord.y);

@@ -8,4 +8,4 @@ You can find the original library at
 
 http://www.arduino.cc/playground/Code/GLCDks0108
 
-Tested only on PIC16F887 !
+Tested on PIC16F887 and PIC18F45K22.  It may work on other platforms.

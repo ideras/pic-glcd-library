@@ -1,32 +1,13 @@
 /*
-  ks0108.h - Arduino library support for ks0108 and compatable graphic LCDs
-  Copyright (c)2008 Michael Margolis All right reserved
-  mailto:memargolis@hotmail.com?subject=KS0108_Library 
+  GLCD.h - PIC library support for ks0108 and compatible graphic LCDs
+  Ported to PIC by Ivan de Jesus Deras ideras@gmail.com
 
-  The high level functions of this library are based on version 1.1 of ks0108 graphics routines
-  written and copyright by Fabian Maximilian Thiele. His sitelink is dead but
-  you can obtain a copy of his original work here:
-  http://www.scienceprog.com/wp-content/uploads/2007/07/glcd_ks0108.zip
-
-  Code changes include conversion to an Arduino C++ library, rewriting the low level routines 
-  to read busy status flag and support a wider range of displays, adding more flexibility
-  in port addressing and improvements in I/O speed. The interface has been made more Arduino friendly
-  and some convenience functions added. 
+  Original Arduino library by Michael Margolis All right reserved
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-
-  Version:   1.0  - May  8 2008  - initial release
-  Version:   1.0a - Sep  1 2008  - simplified command pin defines  
-  Version:   1.0b - Sep 18 2008  - replaced <wiring.h> with boolean typedef for rel 0012  
-  Version:   1.1  - Nov  7 2008  - restructured low level code to adapt to panel speed
-                                 - moved chip and panel configuration into seperate header files    
-							     - added fixed width system font
-  Version:   2   - May 26 2009   - second release
-                                 - added support for Mega and Sanguino, improved panel speed tolerance, added bitmap support
-     
-*/
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ */
 
 #include <stdint.h>
 
@@ -42,44 +23,14 @@ typedef uint8_t byte;
 #include "GLCD_Pins.h"
 #include "GLCD_Panel.h"      // this contains LCD panel specific configuration
 
-// macros for pasting port defines
-#define GLUE(a, b)     a##b 
-#define PORT(x)        GLUE(PORT, x)
-#define PIN(x)         GLUE(PORT, x)
-#define DDR(x)         GLUE(TRIS, x)
+#define DISPLAY_WIDTH 128
+#define DISPLAY_HEIGHT 64
 
-// paste together the port definitions if using nibbles
-#define LCD_DATA_IN_LOW		PIN(LCD_DATA_LOW_NBL)	// Data I/O Register, low nibble
-#define LCD_DATA_OUT_LOW	PORT(LCD_DATA_LOW_NBL)  // Data Output Register - low nibble
-#define LCD_DATA_DIR_LOW	DDR(LCD_DATA_LOW_NBL)	// Data Direction Register for Data Port, low nibble
+// panel controller chips
+#define CHIP_WIDTH     64  // pixels per chip
 
-#define LCD_DATA_IN_HIGH	PIN(LCD_DATA_HIGH_NBL)	// Data Input Register  high nibble
-#define LCD_DATA_OUT_HIGH	PORT(LCD_DATA_HIGH_NBL)	// Data Output Register - high nibble
-#define LCD_DATA_DIR_HIGH	DDR(LCD_DATA_HIGH_NBL)	// Data Direction Register for Data Port, high nibble
-
-#define lcdDataOut(_val_) LCD_DATA_OUT(_val_) 
-#define lcdDataDir(_val_) LCD_DATA_DIR(_val_) 
-
-// macros to handle data output
-#ifdef LCD_DATA_NIBBLES  // data is split over two ports
-
-#define LCD_DATA_OUT(_val_) \
-    do {                    \
-            LCD_DATA_OUT_LOW =  (LCD_DATA_OUT_LOW & 0xF0)|(_val_ & 0x0F);   \
-            LCD_DATA_OUT_HIGH = (LCD_DATA_OUT_HIGH & 0x0F)|(_val_ & 0xF0);  \
-    } while (0)
-
-#define LCD_DATA_DIR(_val_) \
-    do {                    \
-        LCD_DATA_DIR_LOW =  (LCD_DATA_DIR_LOW & 0xF0)|(_val_ & 0x0F);   \
-        LCD_DATA_DIR_HIGH = (LCD_DATA_DIR_HIGH & 0x0F)|(_val_ & 0xF0);  \
-    } while (0)
-
-#else  // all data on same port (low equals high)
-#define LCD_DATA_OUT(_val_) LCD_DATA_OUT_LOW = (_val_);
-#define LCD_DATA_DIR(_val_) LCD_DATA_DIR_LOW = (_val_);
-#endif
-
+#define lcdDataOut(d)   GLCD_DOUT_REG = d
+#define lcdDataDir(d)   GLCD_DDIR_REG = d
 
 // Commands
 #ifdef HD44102 

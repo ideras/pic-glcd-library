@@ -6,30 +6,40 @@
   This is the configuration file for mapping PIC pins to the ks0108 Graphics LCD library
 */
 
-#ifndef	GLCD_CONFIG_H
-#define GLCD_CONFIG_H
+#ifndef	GLCD_PINS_H
+#define GLCD_PINS_H
 
-/*********************************************************/
-/*  Configuration for assigning LCD bits to PIC Pins */
-/*********************************************************/
-/* PIC pins used for Commands
- * This assignment is based on EasyPIC5
- */
+#ifdef _PIC18
 
-#define CSEL1	PORTBbits.RB1		// CS1 Bit   // swap pin assignments with CSEL2 if left/right image is reversed
-#define CSEL2	PORTBbits.RB0		// CS2 Bit
+#define CSEL1	LATBbits.LATB0		// CS1 Bit   // swap pin assignments with CSEL2 if left/right image is reversed
+#define CSEL2	LATBbits.LATB1		// CS2 Bit
+
+#define R_W	LATBbits.LATB3		// R/W Bit
+#define D_I	LATBbits.LATB2		// D/I Bit
+#define EN	LATBbits.LATB4		// EN Bit
+#define RST 	LATBbits.LATB5		// Reset Bit
+
+#define GLCD_DOUT_REG   LATD
+#define GLCD_DIN_REG    PORTD
+#define GLCD_DDIR_REG   TRISD
+
+#elif defined (__PICC__)
+
+#define CSEL1	PORTBbits.RB0		// CS1 Bit   // swap pin assignments with CSEL2 if left/right image is reversed
+#define CSEL2	PORTBbits.RB1		// CS2 Bit
 
 #define R_W	PORTBbits.RB3		// R/W Bit
-#define D_I	PORTBbits.RB2		// D/I Bit 
+#define D_I	PORTBbits.RB2		// D/I Bit
 #define EN	PORTBbits.RB4		// EN Bit
-#define RST 	PORTBbits.RB5		// Reset Bit 
+#define RST 	PORTBbits.RB5		// Reset Bit
 
-/*******************************************************/
-/*     end of Pins configuration                       */
-/*******************************************************/
+#define GLCD_DOUT_REG   PORTD
+#define GLCD_DIN_REG    PORTD
+#define GLCD_DDIR_REG   TRISD
 
-#define LCD_DATA_LOW_NBL        D
-#define LCD_DATA_HIGH_NBL       D
+#else
+#error "Please define GLCD pin mapping for your platform."
+#endif
 
 // macros to fast write data to pins known at compile time
 #define fastWriteHigh(_pin_)	_pin_ = 1
