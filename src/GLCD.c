@@ -955,7 +955,7 @@ void GLCD_WriteData(uint8_t data)
 #ifdef LCD_CMD_PORT 
         cmdPort = LCD_CMD_PORT; // save command port
 #endif
-        GLCD_ReadData(data);
+        GLCD_ReadData(displayData);
 #ifdef LCD_CMD_PORT 		
         LCD_CMD_PORT = cmdPort; // restore command port
 #else
